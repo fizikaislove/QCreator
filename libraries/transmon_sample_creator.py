@@ -1,7 +1,9 @@
-import numpy as np
-import gdspy
-import libraries.general_design_functions as gdf
 from typing import NamedTuple, SupportsFloat, Any
+
+import gdspy
+import numpy as np
+
+import libraries.general_design_functions as gdf
 
 Bridges_over_line_param = NamedTuple('Bridge_params',
                                      [('distance', SupportsFloat),
@@ -32,12 +34,12 @@ class Sample:
         self.gridline_x_layer = layer_configurations['vertical gridlines']
         self.gridline_y_layer = layer_configurations['horizontal gridlines']
 
-
         self.sample_vertical_size = None
         self.sample_horizontal_size = None
 
         self.pads = []
         self.coaxmons = []
+        self.fluxoniums = []
         self.lines = []
         self.bridges = []
         self.couplers = []
@@ -46,24 +48,26 @@ class Sample:
 
     # General methods for all qubit classes
     def numerate(self, name, number, coordinate):
-        size=70
-        layer=51
+        size = 70
+        layer = 51
         vtext = gdspy.Text(name + str(number), size, coordinate, horizontal=True, layer=layer)
-        # label = gdspy.Label(name + str(number), coordinate, texttype=25)
+        # label = gdspy.Label(name + str(number), center, texttype=25)
         self.label_cell.add(vtext)
+
     def add_pad(self, TL_core, TL_gap, TL_ground, coordinate):
         self.pads.append(gdf.Pads(TL_core, TL_gap, TL_ground, coordinate))
-        self.numerate("Pad", len(self.pads)-1,coordinate)
+        self.numerate("Pad", len(self.pads) - 1, coordinate)
 
     def generate_sample_edges_and_pads(self):
         results_total, restricted_area = gdf.Pads.generate_ground(self.pads,
-                                                              self.sample_vertical_size, self.sample_horizontal_size, self.total_layer,
-                                                              self.restricted_area_layer)
+                                                                  self.sample_vertical_size,
+                                                                  self.sample_horizontal_size, self.total_layer,
+                                                                  self.restricted_area_layer)
         self.total_cell.add(results_total)
         self.restricted_area_cell.add(restricted_area)
 
-
-    def generate_line(self, points, core, gap, ground, nodes=None, end=None, R=40, corner_type='round',bridge_params=None):
+    def generate_line(self, points, core, gap, ground, nodes=None, end=None, R=40, corner_type='round',
+                      bridge_params=None):
         """
                 :param bridge_params default is None. In this way there won't be created any addidtional bridges.
                 To create bridges crossing the line define "bridge_params" as a tuple with 5 elements in order:
@@ -95,7 +99,8 @@ class Sample:
                     self.generate_bridge(bridge_center, width, length, padsize, line_angle + np.pi / 2,
                                          line_type=line_type)
 
-        self.lines.append(gdf.Feedline(points, core, gap, ground, nodes, self.total_layer, self.restricted_area_layer, R))
+        self.lines.append(
+            gdf.Feedline(points, core, gap, ground, nodes, self.total_layer, self.restricted_area_layer, R))
         line = self.lines[-1].generate_feedline(corner_type)
         if end is not None:
             end_line = self.lines[-1].generate_end(end)
@@ -107,8 +112,6 @@ class Sample:
         self.restricted_area_cell.add(line[1])
         self.cell_to_remove.add(line[2])
 
-
-
     def generate_bridge(self, point, width, length, padsize, angle, line_type=None):
         self.bridges.append(gdf.Airbridge(width, length, padsize, point, angle, line_type))
         bridge = self.bridges[-1].generate_bridge(self.AirbridgesPadLayer, self.AirbridgesLayer)
@@ -119,12 +122,12 @@ class Sample:
     def generate_narrowing_part(self, firstline, secondline):
         narrowing_length = 15
         narrowing1 = gdf.Narrowing(firstline.end[0], firstline.end[1],
-                               firstline.core, firstline.gap, firstline.ground,
-                               secondline[0], secondline[1], secondline[2],
-                               narrowing_length, firstline.angle + np.pi)
+                                   firstline.core, firstline.gap, firstline.ground,
+                                   secondline[0], secondline[1], secondline[2],
+                                   narrowing_length, firstline.angle + np.pi)
         line1 = narrowing1.generate_narrowing()
         self.total_cell.add(line1[0])
-        self.restricted_area_cell.add(gdspy.boolean(line1[1],line1[1],'or',layer=self.restricted_area_layer))
+        self.restricted_area_cell.add(gdspy.boolean(line1[1], line1[1], 'or', layer=self.restricted_area_layer))
         self.cell_to_remove.add(line1[2])
         return (firstline.end[0] + narrowing_length * np.cos(firstline.angle),
                 firstline.end[1] + narrowing_length * np.sin(firstline.angle))
@@ -132,9 +135,9 @@ class Sample:
     def generate_bridge_over_feedline(self, firstline, airbridge, secondline, distance_between_airbridges):
         narrowing_length = 15
         narrowing1 = gdf.Narrowing(firstline.end[0], firstline.end[1],
-                               firstline.core, firstline.gap, firstline.ground,
-                               airbridge[2], distance_between_airbridges, airbridge[2],
-                               narrowing_length, np.pi + firstline.angle)
+                                   firstline.core, firstline.gap, firstline.ground,
+                                   airbridge[2], distance_between_airbridges, airbridge[2],
+                                   narrowing_length, np.pi + firstline.angle)
         narrowing2 = gdf.Narrowing(
             firstline.end[0] + np.cos(firstline.angle) * (narrowing_length + airbridge[0] * 2 + airbridge[1]),
             firstline.end[1] + np.sin(firstline.angle) * (narrowing_length + airbridge[0] * 2 + airbridge[1]),
@@ -144,7 +147,7 @@ class Sample:
         self.generate_bridge((firstline.end[0] + np.cos(firstline.angle) * narrowing_length -
                               np.sin(firstline.angle) * (distance_between_airbridges + airbridge[2]),
                               firstline.end[1] + np.cos(firstline.angle) * (
-                                          distance_between_airbridges + airbridge[2]) +
+                                      distance_between_airbridges + airbridge[2]) +
                               np.sin(firstline.angle) * narrowing_length),
                              airbridge[0], airbridge[1], airbridge[2], firstline.angle, 'line')
         self.generate_bridge((firstline.end[0] + np.cos(firstline.angle) * narrowing_length,
@@ -153,7 +156,7 @@ class Sample:
         self.generate_bridge((firstline.end[0] + np.cos(firstline.angle) * narrowing_length +
                               np.sin(firstline.angle) * (distance_between_airbridges + airbridge[2]),
                               firstline.end[1] - np.cos(firstline.angle) * (
-                                          distance_between_airbridges + airbridge[2]) +
+                                      distance_between_airbridges + airbridge[2]) +
                               np.sin(firstline.angle) * narrowing_length),
                              airbridge[0], airbridge[1], airbridge[2], firstline.angle, 'line')
         line1 = narrowing1.generate_narrowing()
@@ -217,7 +220,6 @@ class Sample:
         self.result.add(result_x)
         self.result.add(result_y)
 
-
     # Resonator + Purcell methods
     def generate_resonator_coupler(self, start, end, feedline_core, feedline_gap, feedline_ground, purcell_core,
                                    purcell_gap,
@@ -230,6 +232,11 @@ class Sample:
         line, connectors = coupler.Generate_coupler_feedline_and_purcell()
         self.total_cell.add(line)
         return connectors
+
+    def add_fluxonium(self, center_coords, distance: SupportsFloat,
+                      rectang_params, gap: SupportsFloat, ground: SupportsFloat):
+        self.fluxoniums.append(gdf.Fluxonium(center_coords, distance, rectang_params, gap, ground))
+        self.total_cell.add(self.fluxoniums[-1].generate_fluxonium())
 
     def generate_purcell(self, purcell_begin, purcell_end, restricted_area_points0, a_restricted_area,
                          b_restricted_area,
@@ -293,9 +300,8 @@ class Sample:
         line = coupler.generate_coupler_resonator_purcell()
         self.total_cell.add(line)
         self.cell_to_remove.add(line[1])
+    # Specific methods
 
-
-    #Specific methods
     def add_coaxmon(self, coordinate, r1, r2, r3, r4, outer_ground, Couplers, JJ, angle=0, mirror=False):
         self.coaxmons.append(gdf.Coaxmon(coordinate, r1, r2, r3, r4, outer_ground, self.total_layer,
                                          self.restricted_area_layer, self.JJ_layer, Couplers, JJ))
@@ -307,14 +313,17 @@ class Sample:
 
     def add_qubit_coupler(self, core, gap, ground, Coaxmon1, Coaxmon2, JJ, squid):
         coupler = gdf.IlyaCoupler(core, gap, ground, Coaxmon1, Coaxmon2, JJ, squid,
-                              self.total_layer, self.restricted_area_layer, self.JJ_layer, self.layer_to_remove)
+                                  self.total_layer, self.restricted_area_layer, self.JJ_layer, self.layer_to_remove)
         self.couplers.append(coupler)
         line, JJ = coupler.generate_coupler()
         self.total_cell.add([line[0], JJ[0], JJ[1]])
         #         self.total_cell.add(line[1])
         self.restricted_area_cell.add(line[1])
         self.cell_to_remove.add([line[2], JJ[2]])
-        self.numerate("IlCoup", len(self.couplers) - 1, ((Coaxmon1.center[0]+Coaxmon2.center[0])/2, (Coaxmon1.center[1]+Coaxmon2.center[1])/2))
+        self.numerate("IlCoup", len(self.couplers) - 1,
+                      ((Coaxmon1.center[0] + Coaxmon2.center[0]) / 2, (Coaxmon1.center[1] + Coaxmon2.center[1]) / 2))
+
+
 def calculate_total_length(points):
     i0, j0 = points[0]
     length = 0
