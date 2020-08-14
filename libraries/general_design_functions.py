@@ -338,9 +338,9 @@ class Feedline:
         return result, result_, result_new
 
     def generate_end(self, end):
-        if end['type'] is 'open':
+        if end['type'] == 'open':
             return self.generate_open_end(end)
-        if end['type'] is 'fluxline':
+        if end['type'] == 'fluxline':
             return self.generate_fluxline_end(end)
 
     def generate_fluxline_end(self, end):
