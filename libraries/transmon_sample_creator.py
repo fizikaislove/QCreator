@@ -302,8 +302,8 @@ class Sample:
 
     def add_flux_jj(self, left_rect_param, right_rect_param, cap_param,
                     holder_width, fastener_height, jj_width, triangle_side):
-        self.fluxoniums[-1].generate_jj(left_rect_param, right_rect_param, cap_param,
-                    holder_width, fastener_height, jj_width, triangle_side)
+        self.total_cell.add(self.fluxoniums[-1].generate_jj(left_rect_param, right_rect_param, cap_param,
+                    holder_width, fastener_height, jj_width, triangle_side))
 
 
     def add_qubit_coupler(self, core, gap, ground, Coaxmon1, Coaxmon2, JJ, squid):
