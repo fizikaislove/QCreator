@@ -1,6 +1,8 @@
+from functools import reduce
+
 import gdspy
 import numpy as np
-from functools import reduce
+
 import libraries.JJ4q as JJ4q
 import libraries.squid3JJ as squid3JJ
 
@@ -611,8 +613,8 @@ class Fluxonium:
         :param center: center of fluxonium like (x_coordinate, y_coordinate)
         :param distance: distance from center to the borders of inner rectangles
         :param rectang_params: parameters like (width_rectang,height_rectang)
-        :param gap: distance between inner rectangles and ground_width
-        :param ground_width: width of ground_width
+        :param gap: distance between inner rectangles and ground
+        :param ground_width: width of ground
         """
         self.center = center
         self.distance = distance
@@ -623,6 +625,7 @@ class Fluxonium:
     def generate_fluxonium(self):
         half_length_x = self.distance + self.rectang_params[0] + self.gap + self.ground
         half_length_y = self.rectang_params[1] / 2 + self.gap + self.ground
+
         ground = gdspy.Rectangle((self.center[0] - half_length_x, self.center[1] - half_length_y),
                                  (self.center[0] + half_length_x, self.center[1] + half_length_y))
         inner_rectangles = [
@@ -633,10 +636,11 @@ class Fluxonium:
                 (self.center[0] + self.distance, self.center[1] - self.rectang_params[1] / 2),
                 (self.center[0] + self.distance + self.rectang_params[0], self.center[1] + self.rectang_params[1] / 2))
         ]
-        empty_rectangle = gdspy.Rectangle((self.center[0] - self.rectang_params[0] - self.gap,
+        empty_rectangle = gdspy.Rectangle((self.center[0] - self.distance - self.rectang_params[0] - self.gap,
                                            self.center[1] - self.rectang_params[1] / 2 - self.gap),
-                                          (self.center[0] + self.rectang_params[0] + self.gap,
+                                          (self.center[0] + self.distance + self.rectang_params[0] + self.gap,
                                            self.center[1] + self.rectang_params[1] / 2 + self.gap))
+
         result = gdspy.boolean(ground, empty_rectangle, 'not')
         result = gdspy.boolean(result, inner_rectangles[0], 'or')
         result = gdspy.boolean(result, inner_rectangles[1], 'or')
