@@ -632,7 +632,7 @@ class Fluxonium:
             gdspy.Rectangle(
                 (self.center[0] + self.distance, self.center[1] - self.rectang_params[1] / 2),
                 (self.center[0] + self.distance + self.rectang_params[0], self.center[1] + self.rectang_params[1] / 2))
-            ]
+        ]
         empty_rectangle = gdspy.Rectangle((self.center[0] - self.rectang_params[0] - self.gap,
                                            self.center[1] - self.rectang_params[1] / 2 - self.gap),
                                           (self.center[0] + self.rectang_params[0] + self.gap,
@@ -641,3 +641,60 @@ class Fluxonium:
         result = gdspy.boolean(result, inner_rectangles[0], 'or')
         result = gdspy.boolean(result, inner_rectangles[1], 'or')
         return result
+
+    def generate_jj(self, left_rect_param, right_rect_param, cap_param,
+                    holder_width, fastener_height, jj_width, triangle_side):
+        # todo: picture -- fuck documentation
+        # todo: change layer
+        layer = None
+        bottom = self.center[1] - self.rectang_params[1] / 2
+        holders = [
+            gdspy.Rectangle(
+                (self.center[0] - self.distance, bottom),
+                (self.center[0] - self.distance - holder_width, bottom + self.rectang_params[1])),
+            gdspy.Rectangle(
+                (self.center[0] + self.distance, bottom),
+                (self.center[0] + self.distance + holder_width, bottom + self.rectang_params[1]))
+        ]
+        fasteners = [
+            gdspy.Rectangle(
+                (self.center[0] - jj_width / 2, bottom),
+                (self.center[0] - self.distance, bottom + fastener_height)),
+            gdspy.Rectangle(
+                (self.center[0] + jj_width / 2, bottom),
+                (self.center[0] + self.distance, bottom + fastener_height))
+        ]
+        left_rect = gdspy.Rectangle(
+            (self.center[0] - jj_width / 2, bottom + left_rect_param[1]),
+            (self.center[0] - jj_width / 2 + left_rect_param[0], bottom))
+        right_rect = gdspy.Rectangle(
+            (self.center[0] + jj_width / 2, bottom + right_rect_param[1]),
+            (self.center[0] + jj_width / 2 - right_rect_param[0], bottom))
+        cap = gdspy.Rectangle(
+            (self.center[0] + jj_width / 2 - right_rect_param[0], bottom + right_rect_param[1] - cap_param[1]),
+            (self.center[0] + jj_width / 2 - right_rect_param[0] - cap_param[0], bottom + right_rect_param[1]))
+        triangles = [
+            _generate_rectangular_triangle(
+                (self.center[0] + jj_width / 2 - right_rect_param[0], bottom + right_rect_param[1] - cap_param[1]),
+                triangle_side, to_x=False, to_y=False, layer=layer),
+            _generate_rectangular_triangle(
+                (self.center[0] + jj_width / 2, bottom + fastener_height),
+                triangle_side, to_x=True, to_y=True, layer=layer),
+            _generate_rectangular_triangle(
+                (self.center[0] - jj_width / 2, bottom + fastener_height),
+                triangle_side, to_x=False, to_y=True, layer=layer)
+        ]
+        empty_triangle = _generate_rectangular_triangle(
+            (self.center[0] + jj_width / 2 - right_rect_param[0], bottom),
+            triangle_side, to_x=True, to_y=True, layer=layer)
+        ...
+
+
+def _generate_rectangular_triangle(vertex, side, to_x: bool = True, to_y: bool = True, layer=None):
+    x = side * {True: +1, False: -1}[to_x]
+    y = side * {True: +1, False: -1}[to_y]
+    return gdspy.Polygon([
+        vertex,
+        (vertex[0] + x, vertex[1]),
+        (vertex[0], vertex[1] + y)],
+        layer=layer)
