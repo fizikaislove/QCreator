@@ -693,17 +693,17 @@ class Fluxonium:
         result = reduce(lambda x, y: gdspy.boolean(y, x, 'or', layer=layer), all_figures, None)
         return gdspy.boolean(result, empty_triangle, 'not', layer=layer)
 
-    def generate_inductivity(self, N, d, fastener_height, side, distance1, distance2, gap, width1, width2, ledge,
-                             layer):
+    def generate_inductivity(self, N, d, fastener_height, side_x, side_y, distance1, distance2, gap_lower, gap_upper,
+                             width1, width2, ledge, layer):
         """pay attention that fastener_height must be the same as in generate_jj"""
         bottom = self.center[1] - self.rectang_params[1] / 2 + fastener_height
         left_squares, right_squares = map(lambda sign: [gdspy.Rectangle(
-            (self.center[0] + sign * distance1, bottom + i * (d + side)),
-            (self.center[0] + sign * (distance1 + side), bottom + i * (d + side) + side),
+            (self.center[0] + sign * distance1, bottom + i * (d + side_y)),
+            (self.center[0] + sign * (distance1 + side_x), bottom + i * (d + side_y) + side_y),
             layer=layer
         ) for i in range(N)], [+1, -1])
         result = reduce(lambda x, y: gdspy.boolean(y, x, 'or', layer=layer), left_squares + right_squares, None)
-        bottom += N * (side + d)
+        bottom += N * (side_y + d)
         # going from bottom to top
         rectangles = [
             gdspy.Rectangle(
@@ -719,14 +719,14 @@ class Fluxonium:
         rectangles += [
             gdspy.Rectangle(
                 (self.center[0] - distance2 - width2, bottom),
-                (self.center[0] - distance2, bottom + 2 * gap + width1),
+                (self.center[0] - distance2, bottom + gap_lower+gap_upper + width1),
                 layer=layer),
             gdspy.Rectangle(
                 (self.center[0] + distance2 + width2, bottom),
-                (self.center[0] + distance2, bottom + 2 * gap + width1),
+                (self.center[0] + distance2, bottom + gap_lower+gap_upper + width1),
                 layer=layer)
         ]
-        bottom += 2 * gap + width1
+        bottom += gap_lower+gap_upper + width1
         rectangles.append(gdspy.Rectangle(
             (self.center[0] - distance2 - width2, bottom),
             (self.center[0] + 1 / 2 * width2, bottom + width2),
@@ -741,7 +741,7 @@ class Fluxonium:
             (self.center[0] - width2 / 2, bottom),
             (self.center[0] + width2 / 2, bottom + ledge),
             layer=layer))
-        bottom -= gap + width1 + width2
+        bottom -= gap_upper + width1 + width2
         rectangles.append(gdspy.Rectangle(
             (self.center[0] - distance2, bottom),
             (self.center[0] + distance2, bottom + width1),
