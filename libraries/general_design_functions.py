@@ -673,7 +673,8 @@ class Fluxonium:
             (self.center[0] + jj_width / 2 - right_rect_param[0], bottom), layer=layer)
         cap = gdspy.Rectangle(
             (self.center[0] + jj_width / 2 - right_rect_param[0], bottom + right_rect_param[1] - cap_param[1]),
-            (self.center[0] + jj_width / 2 - right_rect_param[0] - cap_param[0], bottom + right_rect_param[1]), layer=layer)
+            (self.center[0] + jj_width / 2 - right_rect_param[0] - cap_param[0], bottom + right_rect_param[1]),
+            layer=layer)
         triangles = [
             _generate_rectangular_triangle(
                 (self.center[0] + jj_width / 2 - right_rect_param[0], bottom + right_rect_param[1] - cap_param[1]),
@@ -691,6 +692,61 @@ class Fluxonium:
         all_figures = holders + fasteners + [left_rect, right_rect, cap] + triangles
         result = reduce(lambda x, y: gdspy.boolean(y, x, 'or', layer=layer), all_figures, None)
         return gdspy.boolean(result, empty_triangle, 'not', layer=layer)
+
+    def generate_inductivity(self, N, d, fastener_height, side, distance1, distance2, gap, width1, width2, ledge,
+                             layer):
+        """pay attention that fastener_height must be the same as in generate_jj"""
+        bottom = self.center[1] - self.rectang_params[1] / 2 + fastener_height
+        left_squares, right_squares = map(lambda sign: [gdspy.Rectangle(
+            (self.center[0] + sign * distance1, bottom + i * (d + side)),
+            (self.center[0] + sign * (distance1 + side), bottom + i * (d + side) + side),
+            layer=layer
+        ) for i in range(N)], [+1, -1])
+        result = reduce(lambda x, y: gdspy.boolean(y, x, 'or', layer=layer), left_squares + right_squares, None)
+        bottom += N * (side + d)
+        # going from bottom to top
+        rectangles = [
+            gdspy.Rectangle(
+                (self.center[0] - distance2 - width2, bottom),
+                (self.center[0] - distance1, bottom + width1),
+                layer=layer),
+            gdspy.Rectangle(
+                (self.center[0] + distance2 + width2, bottom),
+                (self.center[0] + distance1, bottom + width1),
+                layer=layer)
+        ]
+        bottom += width1
+        rectangles += [
+            gdspy.Rectangle(
+                (self.center[0] - distance2 - width2, bottom),
+                (self.center[0] - distance2, bottom + 2 * gap + width1),
+                layer=layer),
+            gdspy.Rectangle(
+                (self.center[0] + distance2 + width2, bottom),
+                (self.center[0] + distance2, bottom + 2 * gap + width1),
+                layer=layer)
+        ]
+        bottom += 2 * gap + width1
+        rectangles.append(gdspy.Rectangle(
+            (self.center[0] - distance2 - width2, bottom),
+            (self.center[0] + 1 / 2 * width2, bottom + width2),
+            layer=layer))
+        rectangles.append(gdspy.Rectangle(
+            (self.center[0] + distance2, bottom),
+            (self.center[0] + distance2 + width2, bottom + width2 + ledge),
+            layer=layer))
+        # center rectangles
+        bottom += width2
+        rectangles.append(gdspy.Rectangle(
+            (self.center[0] - width2 / 2, bottom),
+            (self.center[0] + width2, bottom + ledge),
+            layer=layer))
+        bottom -= gap + width1 + width2
+        rectangles.append(gdspy.Rectangle(
+            (self.center[0] - distance2, bottom),
+            (self.center[0] + distance2, bottom + width1),
+            layer=layer))
+        return reduce(lambda x, y: gdspy.boolean(y, x, 'or', layer=layer), rectangles, result)
 
 
 def _generate_rectangular_triangle(vertex, side, to_x: bool = True, to_y: bool = True, layer=None):

@@ -307,6 +307,11 @@ class Sample:
                                                             holder_width, fastener_height, jj_width, triangle_side,
                                                             self.JJ_layer))
 
+    def add_flux_inductivity(self, N, d, fastener_height, side, distance1, distance2, gap, width1, width2, ledge):
+        self.total_cell.add(
+            self.fluxoniums[-1].generate_inductivity(N, d, fastener_height, side, distance1, distance2, gap, width1,
+                                                     width2, ledge, self.JJ_layer))
+
     def add_qubit_coupler(self, core, gap, ground, Coaxmon1, Coaxmon2, JJ, squid):
         coupler = gdf.IlyaCoupler(core, gap, ground, Coaxmon1, Coaxmon2, JJ, squid,
                                   self.total_layer, self.restricted_area_layer, self.JJ_layer, self.layer_to_remove)
