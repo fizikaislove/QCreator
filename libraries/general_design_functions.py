@@ -697,8 +697,7 @@ class Fluxonium:
 
 
 def _generate_rectangular_triangle(vertex, side, to_x: bool = True, to_y: bool = True, layer=None):
-    x = side * {True: +1, False: -1}[to_x]
-    y = side * {True: +1, False: -1}[to_y]
+    x, y = map(lambda to_z: side * {True: +1, False: -1}[to_z], [to_x, to_y])
     return gdspy.Polygon([
         vertex,
         (vertex[0] + x, vertex[1]),
