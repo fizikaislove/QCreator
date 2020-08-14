@@ -1,6 +1,6 @@
 import gdspy
 import numpy as np
-
+from functools import reduce
 import libraries.JJ4q as JJ4q
 import libraries.squid3JJ as squid3JJ
 
@@ -390,7 +390,7 @@ class Feedline:
 
     def generate_open_end(self, end):
         end_gap = end['gap']
-        end_ground_length = end['ground']
+        end_ground_length = end['ground_width']
         x_begin = self.end[0]
         y_begin = self.end[1]
 
@@ -611,8 +611,8 @@ class Fluxonium:
         :param center: center of fluxonium like (x_coordinate, y_coordinate)
         :param distance: distance from center to the borders of inner rectangles
         :param rectang_params: parameters like (width_rectang,height_rectang)
-        :param gap: distance between inner rectangles and ground
-        :param ground_width: width of ground
+        :param gap: distance between inner rectangles and ground_width
+        :param ground_width: width of ground_width
         """
         self.center = center
         self.distance = distance
@@ -687,7 +687,9 @@ class Fluxonium:
         empty_triangle = _generate_rectangular_triangle(
             (self.center[0] + jj_width / 2 - right_rect_param[0], bottom),
             triangle_side, to_x=True, to_y=True, layer=layer)
-        ...
+        all_figures = holders + fasteners + [left_rect, right_rect, cap] + triangles
+        result = reduce(lambda x, y: gdspy.boolean(y, x, 'or'), all_figures, None)
+        return gdspy.boolean(result, empty_triangle, 'not')
 
 
 def _generate_rectangular_triangle(vertex, side, to_x: bool = True, to_y: bool = True, layer=None):

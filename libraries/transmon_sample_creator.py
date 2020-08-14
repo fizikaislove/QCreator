@@ -175,27 +175,7 @@ class Sample:
         self.result.add(gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
                                       self.cell_to_remove.get_polygons(by_spec=True)[(2, 0)], 'not',
                                       layer=self.total_layer))
-        # костыль
 
-    #         self.result.add(gdspy.boolean(sample.total_cell.get_polygons(by_spec=True)[(self.total_layer,0)],
-    #                                       sample.total_cell.get_polygons(by_spec=True)[(3,0)],'not',
-    #                                       layer = self.total_layer))
-    #         self.result.add(gdspy.boolean(sample.total_cell.get_polygons(by_spec=True)[(3,0)],
-    #                                       sample.total_cell.get_polygons(by_spec=True)[(3,0)],'or',
-    #                                       layer = 3))
-    #         self.result.add(gdspy.boolean(sample.total_cell.get_polygons(by_spec=True)[(0,0)],
-    #                                       sample.total_cell.get_polygons(by_spec=True)[(3,0)],'not',
-    #                                       layer = 10))
-
-    #         self.result.add(gdspy.boolean( sample.total_cell.get_polygons(by_spec=True)[(self.JJ_layer,0)],
-    #                                        sample.total_cell.get_polygons(by_spec=True)[(self.JJ_layer,0)],'or',
-    #                                        layer =self.JJ_layer))
-    #         self.result.add(gdspy.boolean( sample.total_cell.get_polygons(by_spec=True)[(self.AirbridgesPadLayer,0)],
-    #                                        sample.total_cell.get_polygons(by_spec=True)[(self.AirbridgesPadLayer,0)],'or',
-    #                                        layer =self.AirbridgesPadLayer))
-    #         self.result.add(gdspy.boolean( sample.total_cell.get_polygons(by_spec=True)[(self.AirbridgesLayer,0)],
-    #                                        sample.total_cell.get_polygons(by_spec=True)[(self.AirbridgesLayer,0)],'or',
-    #                                        layer =self.AirbridgesLayer))
     def create_grid(self, width, gap):
         """add rectangular grid to the structure:
         width = width of the lines
@@ -306,23 +286,24 @@ class Sample:
         self.numerate("Coax", len(self.coaxmons) - 1, coordinate)
 
 
-    def add_fluxonium(self, center, distance, rectang_params, gap, ground):
+    def add_fluxonium(self, center, distance, rectang_params, gap, ground_width):
 
         """
-        :param coordinate: center of fluxonium like (x_coordinate, y_coordinate)
+        :param center: center of fluxonium like (x_coordinate, y_coordinate)
         :param distance: distance from center to the borders of inner rectangles
         :param rectang_params: parameters like (width_rectang,height_rectang)
-        :param gap: distance between inner rectangles and ground
+        :param gap: distance between inner rectangles and ground_width
         :param ground_width: width of ground
 
         ------------------
         """
-
-        self.fluxoniums.append(gdf.Fluxonium(center, distance, rectang_params, gap, ground))
-
-
+        self.fluxoniums.append(gdf.Fluxonium(center, distance, rectang_params, gap, ground_width))
         self.total_cell.add(self.fluxoniums[-1].generate_fluxonium())
 
+    def add_flux_jj(self, left_rect_param, right_rect_param, cap_param,
+                    holder_width, fastener_height, jj_width, triangle_side):
+        self.fluxoniums[-1].generate_jj(left_rect_param, right_rect_param, cap_param,
+                    holder_width, fastener_height, jj_width, triangle_side)
 
 
     def add_qubit_coupler(self, core, gap, ground, Coaxmon1, Coaxmon2, JJ, squid):
@@ -336,7 +317,6 @@ class Sample:
         self.cell_to_remove.add([line[2], JJ[2]])
         self.numerate("IlCoup", len(self.couplers) - 1,
                       ((Coaxmon1.center[0] + Coaxmon2.center[0]) / 2, (Coaxmon1.center[1] + Coaxmon2.center[1]) / 2))
-
 
 def calculate_total_length(points):
     i0, j0 = points[0]
