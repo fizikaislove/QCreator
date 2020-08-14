@@ -1,7 +1,9 @@
-import numpy as np
-import gdspy
-import libraries.general_design_functions as gdf
 from typing import NamedTuple, SupportsFloat, Any
+
+import gdspy
+import numpy as np
+
+import libraries.general_design_functions as gdf
 
 Bridges_over_line_param = NamedTuple('Bridge_params',
                                      [('distance', SupportsFloat),
@@ -285,7 +287,6 @@ class Sample:
         self.restricted_area_cell.add(restricted_area)
         self.numerate("Coax", len(self.coaxmons) - 1, coordinate)
 
-
     def add_fluxonium(self, center, distance, rectang_params, gap, ground_width):
 
         """
@@ -303,8 +304,8 @@ class Sample:
     def add_flux_jj(self, left_rect_param, right_rect_param, cap_param,
                     holder_width, fastener_height, jj_width, triangle_side):
         self.total_cell.add(self.fluxoniums[-1].generate_jj(left_rect_param, right_rect_param, cap_param,
-                    holder_width, fastener_height, jj_width, triangle_side))
-
+                                                            holder_width, fastener_height, jj_width, triangle_side,
+                                                            self.JJ_layer))
 
     def add_qubit_coupler(self, core, gap, ground, Coaxmon1, Coaxmon2, JJ, squid):
         coupler = gdf.IlyaCoupler(core, gap, ground, Coaxmon1, Coaxmon2, JJ, squid,
@@ -317,6 +318,7 @@ class Sample:
         self.cell_to_remove.add([line[2], JJ[2]])
         self.numerate("IlCoup", len(self.couplers) - 1,
                       ((Coaxmon1.center[0] + Coaxmon2.center[0]) / 2, (Coaxmon1.center[1] + Coaxmon2.center[1]) / 2))
+
 
 def calculate_total_length(points):
     i0, j0 = points[0]
