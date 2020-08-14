@@ -739,7 +739,7 @@ class Fluxonium:
         bottom += width2
         rectangles.append(gdspy.Rectangle(
             (self.center[0] - width2 / 2, bottom),
-            (self.center[0] + width2, bottom + ledge),
+            (self.center[0] + width2 / 2, bottom + ledge),
             layer=layer))
         bottom -= gap + width1 + width2
         rectangles.append(gdspy.Rectangle(
