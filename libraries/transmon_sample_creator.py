@@ -287,18 +287,20 @@ class Sample:
         self.restricted_area_cell.add(restricted_area)
         self.numerate("Coax", len(self.coaxmons) - 1, coordinate)
 
-    def add_fluxonium(self, center, distance, rectang_params, gap, ground_width):
-
+    def add_fluxonium(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params,
+                      ledge):
         """
         :param center: center of fluxonium like (x_coordinate, y_coordinate)
         :param distance: distance from center to the borders of inner rectangles
-        :param rectang_params: parameters like (width_rectang,height_rectang)
-        :param gap: distance between inner rectangles and ground_width
+        :param rectang_params: parameters like (width_rectang,height_rectang) for big inner rectangles
+        :param gap: distance between inner rectangles and ground
         :param ground_width: width of ground
-
-        ------------------
+        :param slit_width: width of small area at the top of fluxonium
+        :param rect_in_slit_params: parameters like (width_rectang,height_rectang) for rectangle in slit
+        :param ledge: the depth of penetration of the rectangle into the cavity
         """
-        self.fluxoniums.append(gdf.Fluxonium(center, distance, rectang_params, gap, ground_width))
+        self.fluxoniums.append(
+            gdf.Fluxonium(center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge))
         self.total_cell.add(self.fluxoniums[-1].generate_fluxonium())
 
     def add_flux_jj(self, left_rect_param, right_rect_param, cap_param,

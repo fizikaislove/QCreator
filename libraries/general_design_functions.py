@@ -255,7 +255,7 @@ class Feedline:
                     point3 = new_points[-1]
                 self.points[i + 1] = ((self.points[i + 1][0] + self.points[i + 2][0]) / 2,
                                       (self.points[i + 1][1] + self.points[i + 2][1]) / 2)
-                if corners_type is 'round':
+                if corners_type == 'round':
                     vector1 = np.asarray(new_points[i + 1][:]) - new_points[i][:]
                     vector2 = np.asarray(new_points[i + 2][:]) - new_points[i + 1][:]
                     vector_prod = vector1[0] * vector2[1] - vector1[1] * vector2[0]
@@ -608,19 +608,25 @@ class IlyaCoupler:
 
 
 class Fluxonium:
-    def __init__(self, center, distance, rectang_params, gap, ground_width):
+    def __init__(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge):
         """
         :param center: center of fluxonium like (x_coordinate, y_coordinate)
         :param distance: distance from center to the borders of inner rectangles
-        :param rectang_params: parameters like (width_rectang,height_rectang)
+        :param rectang_params: parameters like (width_rectang,height_rectang) for big inner rectangles
         :param gap: distance between inner rectangles and ground
         :param ground_width: width of ground
+        :param slit_width: width of small area at the top of fluxonium
+        :param rect_in_slit_params: parameters like (width_rectang,height_rectang) for rectangle in slit
+        :param ledge: the depth of penetration of the rectangle into the cavity
         """
         self.center = center
         self.distance = distance
         self.rectang_params = rectang_params
         self.gap = gap
         self.ground = ground_width
+        self.slit_width = slit_width
+        self.rect_in_slit_params = rect_in_slit_params
+        self.ledge = ledge
 
     def generate_fluxonium(self):
         half_length_x = self.distance + self.rectang_params[0] + self.gap + self.ground
@@ -640,10 +646,22 @@ class Fluxonium:
                                            self.center[1] - self.rectang_params[1] / 2 - self.gap),
                                           (self.center[0] + self.distance + self.rectang_params[0] + self.gap,
                                            self.center[1] + self.rectang_params[1] / 2 + self.gap))
-
+        empty_top_rectangle = gdspy.Rectangle(
+            (self.center[0] - self.slit_width / 2, self.center[1] + self.gap + self.rectang_params[1] / 2),
+            (self.center[0] + self.slit_width / 2,
+            self.center[1] + self.gap + self.rectang_params[1] / 2 + self.ground))
+        additional_rectangles = list(map(lambda sign: gdspy.Rectangle(
+            (self.center[0] + sign * self.slit_width / 2,
+             self.center[1] + self.gap + self.rectang_params[1] / 2 - self.ledge),
+            (self.center[0] + sign * (self.slit_width / 2 - self.rect_in_slit_params[0]),
+             self.center[1] + self.gap + self.rectang_params[1] / 2 - self.ledge + self.rect_in_slit_params[1])
+        ), [+1, -1]))
         result = gdspy.boolean(ground, empty_rectangle, 'not')
+        result = gdspy.boolean(result, empty_top_rectangle, 'not')
         result = gdspy.boolean(result, inner_rectangles[0], 'or')
         result = gdspy.boolean(result, inner_rectangles[1], 'or')
+        result = gdspy.boolean(result, additional_rectangles[0], 'or')
+        result = gdspy.boolean(result, additional_rectangles[1], 'or')
         return result
 
     def generate_jj(self, left_rect_param, right_rect_param, cap_param,
@@ -719,14 +737,14 @@ class Fluxonium:
         rectangles += [
             gdspy.Rectangle(
                 (self.center[0] - distance2 - width2, bottom),
-                (self.center[0] - distance2, bottom + gap_lower+gap_upper + width1),
+                (self.center[0] - distance2, bottom + gap_lower + gap_upper + width1),
                 layer=layer),
             gdspy.Rectangle(
                 (self.center[0] + distance2 + width2, bottom),
-                (self.center[0] + distance2, bottom + gap_lower+gap_upper + width1),
+                (self.center[0] + distance2, bottom + gap_lower + gap_upper + width1),
                 layer=layer)
         ]
-        bottom += gap_lower+gap_upper + width1
+        bottom += gap_lower + gap_upper + width1
         rectangles.append(gdspy.Rectangle(
             (self.center[0] - distance2 - width2, bottom),
             (self.center[0] + 1 / 2 * width2, bottom + width2),
