@@ -608,7 +608,7 @@ class IlyaCoupler:
 
 
 class Fluxonium:
-    def __init__(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge):
+    def __init__(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge, inner_rects_layer):
         """
         :param center: center of fluxonium like (x_coordinate, y_coordinate)
         :param distance: distance from center to the borders of inner rectangles
@@ -627,6 +627,7 @@ class Fluxonium:
         self.slit_width = slit_width
         self.rect_in_slit_params = rect_in_slit_params
         self.ledge = ledge
+        self.inner_rects_layer = inner_rects_layer
 
     def generate_fluxonium(self):
         half_length_x = self.distance + self.rectang_params[0] + self.gap + self.ground
@@ -637,10 +638,10 @@ class Fluxonium:
         inner_rectangles = [
             gdspy.Rectangle(
                 (self.center[0] - self.distance - self.rectang_params[0], self.center[1] - self.rectang_params[1] / 2),
-                (self.center[0] - self.distance, self.center[1] + self.rectang_params[1] / 2)),
+                (self.center[0] - self.distance, self.center[1] + self.rectang_params[1] / 2), layer=self.inner_rects_layer),
             gdspy.Rectangle(
                 (self.center[0] + self.distance, self.center[1] - self.rectang_params[1] / 2),
-                (self.center[0] + self.distance + self.rectang_params[0], self.center[1] + self.rectang_params[1] / 2))
+                (self.center[0] + self.distance + self.rectang_params[0], self.center[1] + self.rectang_params[1] / 2), layer=self.inner_rects_layer)
         ]
         empty_rectangle = gdspy.Rectangle((self.center[0] - self.distance - self.rectang_params[0] - self.gap,
                                            self.center[1] - self.rectang_params[1] / 2 - self.gap),
@@ -656,13 +657,15 @@ class Fluxonium:
             (self.center[0] + sign * (self.slit_width / 2 - self.rect_in_slit_params[0]),
              self.center[1] + self.gap + self.rectang_params[1] / 2 - self.ledge + self.rect_in_slit_params[1])
         ), [+1, -1]))
+
         result = gdspy.boolean(ground, empty_rectangle, 'not')
         result = gdspy.boolean(result, empty_top_rectangle, 'not')
         result = gdspy.boolean(result, inner_rectangles[0], 'or')
         result = gdspy.boolean(result, inner_rectangles[1], 'or')
         result = gdspy.boolean(result, additional_rectangles[0], 'or')
         result = gdspy.boolean(result, additional_rectangles[1], 'or')
-        return result
+
+        return result, empty_rectangle
 
     def generate_jj(self, left_rect_param, right_rect_param, cap_param,
                     holder_width, fastener_height, jj_width, triangle_side, layer):

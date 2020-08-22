@@ -34,6 +34,9 @@ class Sample:
         self.gridline_x_layer = layer_configurations['vertical gridlines']
         self.gridline_y_layer = layer_configurations['horizontal gridlines']
 
+        self.inner_rects_layer = 50
+
+
         self.sample_vertical_size = None
         self.sample_horizontal_size = None
 
@@ -299,9 +302,15 @@ class Sample:
         :param rect_in_slit_params: parameters like (width_rectang,height_rectang) for rectangle in slit
         :param ledge: the depth of penetration of the rectangle into the cavity
         """
+
         self.fluxoniums.append(
-            gdf.Fluxonium(center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge))
-        self.total_cell.add(self.fluxoniums[-1].generate_fluxonium())
+            gdf.Fluxonium(center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge, self.inner_rects_layer))
+
+        flux, empty_rectangle = self.fluxoniums[-1].generate_fluxonium()
+
+        self.total_cell.add(flux)
+        self.cell_to_remove.add(empty_rectangle)
+
 
     def add_flux_jj(self, left_rect_param, right_rect_param, cap_param,
                     holder_width, fastener_height, jj_width, triangle_side):
