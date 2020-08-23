@@ -667,7 +667,9 @@ class Fluxonium:
         result = gdspy.boolean(result, additional_rectangles[0], 'or')
         result = gdspy.boolean(result, additional_rectangles[1], 'or')
 
-        return result, empty_rectangle
+        two_small_rectangles = gdspy.boolean(inner_rectangles[0], inner_rectangles[1], 'or')
+
+        return result, empty_rectangle, two_small_rectangles
 
     def generate_jj(self, left_rect_param, right_rect_param, cap_param,
                     holder_width, fastener_height, jj_width, triangle_side, layer):

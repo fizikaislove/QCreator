@@ -48,6 +48,9 @@ class Sample:
 
         self.fluxoniums = []
 
+        # 2 small rectangles in fluxonium:
+        self.two_small_rectangles_list = []
+
         self.MinDist = 4 / np.pi
 
     # General methods for all qubit classes
@@ -174,13 +177,21 @@ class Sample:
         return (firstline.end[0] + 2 * narrowing_length + airbridge[0] * 2 + airbridge[1], firstline.end[1]), None
 
     def finish_him(self):
-        self.result.add(gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
+
+        _tmp = gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
                                       self.cell_to_remove.get_polygons(by_spec=True)[(0, 0)], 'not',
-                                      layer=self.total_layer))
+                                      layer=self.total_layer)
+        self.result.add(_tmp)
 
         # self.total_cell.add(gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
         #                               self.cell_to_remove.get_polygons(by_spec=True)[(0, 0)], 'not',
         #                               layer=self.total_layer))
+
+        for each_two_rects in self.two_small_rectangles_list:
+            _tmp = gdspy.boolean(_tmp, self.two_small_rectangles_list, 'or')
+
+        self.result.add(_tmp)
+
 
     def create_grid(self, width, gap):
         """add rectangular grid to the structure:
@@ -307,11 +318,16 @@ class Sample:
         self.fluxoniums.append(
             gdf.Fluxonium(center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge, self.inner_rects_layer))
 
-        flux, empty_rectangle = self.fluxoniums[-1].generate_fluxonium()
+        flux, empty_rectangle, two_small_rectangles = self.fluxoniums[-1].generate_fluxonium()
 
         self.total_cell.add(flux)
         # self.cell_to_remove.add(flux)
         self.cell_to_remove.add(empty_rectangle)
+
+
+        self.two_small_rectangles_list.append(two_small_rectangles)
+
+
 
 
 
