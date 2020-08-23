@@ -188,7 +188,7 @@ class Sample:
         #                               layer=self.total_layer))
 
         for each_two_rects in self.two_small_rectangles_list:
-            _tmp = gdspy.boolean(_tmp, self.two_small_rectangles_list, 'or')
+            _tmp = gdspy.boolean(_tmp, each_two_rects, 'or')
 
         self.result.add(_tmp)
 
@@ -336,10 +336,17 @@ class Sample:
         self.total_cell.add(self.fluxoniums[-1].generate_jj(left_rect_param, right_rect_param, cap_param,
                                                             holder_width, fastener_height, jj_width, triangle_side,
                                                             self.JJ_layer))
+        self.result.add(self.fluxoniums[-1].generate_jj(left_rect_param, right_rect_param, cap_param,
+                                                            holder_width, fastener_height, jj_width, triangle_side,
+                                                            self.JJ_layer))
 
     def add_flux_inductivity(self, N, d, fastener_height, side_x, side_y, distance1, distance2, gap_lower, gap_upper,
                              width1, width2, ledge):
         self.total_cell.add(
+            self.fluxoniums[-1].generate_inductivity(N, d, fastener_height, side_x, side_y, distance1, distance2,
+                                                     gap_lower, gap_upper, width1, width2, ledge, self.JJ_layer))
+
+        self.result.add(
             self.fluxoniums[-1].generate_inductivity(N, d, fastener_height, side_x, side_y, distance1, distance2,
                                                      gap_lower, gap_upper, width1, width2, ledge, self.JJ_layer))
 
