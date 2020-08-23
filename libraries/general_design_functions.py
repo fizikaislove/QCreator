@@ -608,7 +608,8 @@ class IlyaCoupler:
 
 
 class Fluxonium:
-    def __init__(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge, inner_rects_layer):
+    def __init__(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge,
+                 inner_rects_layer, a, b):
         """
         :param center: center of fluxonium like (x_coordinate, y_coordinate)
         :param distance: distance from center to the borders of inner rectangles
@@ -618,6 +619,8 @@ class Fluxonium:
         :param slit_width: width of small area at the top of fluxonium
         :param rect_in_slit_params: parameters like (width_rectang,height_rectang) for rectangle in slit
         :param ledge: the depth of penetration of the rectangle into the cavity
+        :param a: bottom gap
+        :param b: top gap
         """
         self.center = center
         self.distance = distance
@@ -628,34 +631,39 @@ class Fluxonium:
         self.rect_in_slit_params = rect_in_slit_params
         self.ledge = ledge
         self.inner_rects_layer = inner_rects_layer
+        self.a = a
+        self.b = b
 
     def generate_fluxonium(self):
         half_length_x = self.distance + self.rectang_params[0] + self.gap + self.ground
-        half_length_y = self.rectang_params[1] / 2 + self.gap + self.ground
+        center_to_top_ground = self.rectang_params[1] / 2 + self.b + self.ground
+        center_to_bottom_ground = self.rectang_params[1] / 2 + self.a + self.ground
 
-        ground = gdspy.Rectangle((self.center[0] - half_length_x, self.center[1] - half_length_y),
-                                 (self.center[0] + half_length_x, self.center[1] + half_length_y))
+        ground = gdspy.Rectangle((self.center[0] - half_length_x, self.center[1] - center_to_bottom_ground),
+                                 (self.center[0] + half_length_x, self.center[1] + center_to_top_ground))
         inner_rectangles = [
             gdspy.Rectangle(
                 (self.center[0] - self.distance - self.rectang_params[0], self.center[1] - self.rectang_params[1] / 2),
-                (self.center[0] - self.distance, self.center[1] + self.rectang_params[1] / 2), layer=self.inner_rects_layer),
+                (self.center[0] - self.distance, self.center[1] + self.rectang_params[1] / 2),
+                layer=self.inner_rects_layer),
             gdspy.Rectangle(
                 (self.center[0] + self.distance, self.center[1] - self.rectang_params[1] / 2),
-                (self.center[0] + self.distance + self.rectang_params[0], self.center[1] + self.rectang_params[1] / 2), layer=self.inner_rects_layer)
+                (self.center[0] + self.distance + self.rectang_params[0], self.center[1] + self.rectang_params[1] / 2),
+                layer=self.inner_rects_layer)
         ]
         empty_rectangle = gdspy.Rectangle((self.center[0] - self.distance - self.rectang_params[0] - self.gap,
-                                           self.center[1] - self.rectang_params[1] / 2 - self.gap),
+                                           self.center[1] - self.rectang_params[1] / 2 - self.a),
                                           (self.center[0] + self.distance + self.rectang_params[0] + self.gap,
-                                           self.center[1] + self.rectang_params[1] / 2 + self.gap))
+                                           self.center[1] + self.rectang_params[1] / 2 + self.b))
         empty_top_rectangle = gdspy.Rectangle(
             (self.center[0] - self.slit_width / 2, self.center[1] + self.gap + self.rectang_params[1] / 2),
             (self.center[0] + self.slit_width / 2,
-            self.center[1] + self.gap + self.rectang_params[1] / 2 + self.ground))
+             self.center[1] + self.b + self.rectang_params[1] / 2 + self.ground))
         additional_rectangles = list(map(lambda sign: gdspy.Rectangle(
             (self.center[0] + sign * self.slit_width / 2,
-             self.center[1] + self.gap + self.rectang_params[1] / 2 - self.ledge),
+             self.center[1] + self.b + self.rectang_params[1] / 2 - self.ledge),
             (self.center[0] + sign * (self.slit_width / 2 - self.rect_in_slit_params[0]),
-             self.center[1] + self.gap + self.rectang_params[1] / 2 - self.ledge + self.rect_in_slit_params[1])
+             self.center[1] + self.b + self.rectang_params[1] / 2 - self.ledge + self.rect_in_slit_params[1])
         ), [+1, -1]))
 
         # result = gdspy.boolean(ground, empty_rectangle, 'not')
@@ -781,3 +789,10 @@ def _generate_rectangular_triangle(vertex, side, to_x: bool = True, to_y: bool =
         (vertex[0] + x, vertex[1]),
         (vertex[0], vertex[1] + y)],
         layer=layer)
+
+# class TripleFluxonium:
+#     def __init__(self, dist, ledge, ground_width, gap, central_rect_in_slit, ):
+#         ...
+#
+#     def generate_ground(self):
+#         self.

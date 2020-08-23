@@ -36,7 +36,6 @@ class Sample:
 
         self.inner_rects_layer = 50
 
-
         self.sample_vertical_size = None
         self.sample_horizontal_size = None
 
@@ -179,8 +178,8 @@ class Sample:
     def finish_him(self):
 
         _tmp = gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
-                                      self.cell_to_remove.get_polygons(by_spec=True)[(0, 0)], 'not',
-                                      layer=self.total_layer)
+                             self.cell_to_remove.get_polygons(by_spec=True)[(0, 0)], 'not',
+                             layer=self.total_layer)
         self.result.add(_tmp)
 
         # self.total_cell.add(gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
@@ -191,7 +190,6 @@ class Sample:
             _tmp = gdspy.boolean(_tmp, each_two_rects, 'or')
 
         self.result.add(_tmp)
-
 
     def create_grid(self, width, gap):
         """add rectangular grid to the structure:
@@ -303,7 +301,7 @@ class Sample:
         self.numerate("Coax", len(self.coaxmons) - 1, coordinate)
 
     def add_fluxonium(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params,
-                      ledge):
+                      ledge, a, b):
         """
         :param center: center of fluxonium like (x_coordinate, y_coordinate)
         :param distance: distance from center to the borders of inner rectangles
@@ -316,7 +314,8 @@ class Sample:
         """
 
         self.fluxoniums.append(
-            gdf.Fluxonium(center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge, self.inner_rects_layer))
+            gdf.Fluxonium(center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge,
+                          self.inner_rects_layer, a, b))
 
         flux, empty_rectangle, two_small_rectangles = self.fluxoniums[-1].generate_fluxonium()
 
@@ -324,12 +323,7 @@ class Sample:
         # self.cell_to_remove.add(flux)
         self.cell_to_remove.add(empty_rectangle)
 
-
         self.two_small_rectangles_list.append(two_small_rectangles)
-
-
-
-
 
     def add_flux_jj(self, left_rect_param, right_rect_param, cap_param,
                     holder_width, fastener_height, jj_width, triangle_side):
@@ -337,8 +331,8 @@ class Sample:
                                                             holder_width, fastener_height, jj_width, triangle_side,
                                                             self.JJ_layer))
         self.result.add(self.fluxoniums[-1].generate_jj(left_rect_param, right_rect_param, cap_param,
-                                                            holder_width, fastener_height, jj_width, triangle_side,
-                                                            self.JJ_layer))
+                                                        holder_width, fastener_height, jj_width, triangle_side,
+                                                        self.JJ_layer))
 
     def add_flux_inductivity(self, N, d, fastener_height, side_x, side_y, distance1, distance2, gap_lower, gap_upper,
                              width1, width2, ledge):
