@@ -658,10 +658,12 @@ class Fluxonium:
              self.center[1] + self.gap + self.rectang_params[1] / 2 - self.ledge + self.rect_in_slit_params[1])
         ), [+1, -1]))
 
-        result = gdspy.boolean(ground, empty_rectangle, 'not')
-        result = gdspy.boolean(result, empty_top_rectangle, 'not')
-        result = gdspy.boolean(result, inner_rectangles[0], 'or')
-        result = gdspy.boolean(result, inner_rectangles[1], 'or')
+        # result = gdspy.boolean(ground, empty_rectangle, 'not')
+        # result = gdspy.boolean(result, empty_top_rectangle, 'not')
+        result = gdspy.boolean(ground, empty_top_rectangle, 'not')
+
+        # result = gdspy.boolean(result, inner_rectangles[0], 'or')
+        # result = gdspy.boolean(result, inner_rectangles[1], 'or')
         result = gdspy.boolean(result, additional_rectangles[0], 'or')
         result = gdspy.boolean(result, additional_rectangles[1], 'or')
 

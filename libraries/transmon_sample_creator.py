@@ -175,11 +175,12 @@ class Sample:
 
     def finish_him(self):
         self.result.add(gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
-                                      self.cell_to_remove.get_polygons(by_spec=True)[(2, 0)], 'not',
+                                      self.cell_to_remove.get_polygons(by_spec=True)[(0, 0)], 'not',
                                       layer=self.total_layer))
-        self.result.add(gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
-                                      self.cell_to_remove.get_polygons(by_spec=True)[(2, 0)], 'not',
-                                      layer=self.total_layer))
+
+        # self.total_cell.add(gdspy.boolean(self.total_cell.get_polygons(by_spec=True)[(self.total_layer, 0)],
+        #                               self.cell_to_remove.get_polygons(by_spec=True)[(0, 0)], 'not',
+        #                               layer=self.total_layer))
 
     def create_grid(self, width, gap):
         """add rectangular grid to the structure:
@@ -309,7 +310,9 @@ class Sample:
         flux, empty_rectangle = self.fluxoniums[-1].generate_fluxonium()
 
         self.total_cell.add(flux)
+        # self.cell_to_remove.add(flux)
         self.cell_to_remove.add(empty_rectangle)
+
 
 
     def add_flux_jj(self, left_rect_param, right_rect_param, cap_param,
