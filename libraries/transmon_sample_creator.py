@@ -46,6 +46,7 @@ class Sample:
         self.couplers = []
 
         self.fluxoniums = []
+        self.triple_fluxoniums = []
 
         # 2 small rectangles in fluxonium:
         self.two_small_rectangles_list = []
@@ -300,19 +301,44 @@ class Sample:
         self.restricted_area_cell.add(restricted_area)
         self.numerate("Coax", len(self.coaxmons) - 1, coordinate)
 
+    # def add_triple_fluxonium(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params,
+    #                          ledge, a, b):
+    #     for c in (center,
+    #               (center[0] - 2 * distance - rectang_params[0], center[1]),
+    #               (center[0] + 2 * distance + rectang_params[0], center[1])):
+    #         self.fluxoniums.append(
+    #             gdf.Fluxonium(c, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge,
+    #                           self.inner_rects_layer, a, b))
+    #     flux_3, empty_rectangle_3, two_small_rectangles_3 = tuple(map(list, zip(
+    #         *(self.fluxoniums[-i].generate_fluxonium() for i in range(3)))))
+    #     for sign in [-1, 1]:
+    #         flux_3[0] = gdspy.boolean(flux_3[0], gdspy.Rectangle(
+    #             (center[0] + sign * (rectang_params[0] + distance + gap), center[1] - rectang_params[1] / 2 - a),
+    #             (center[0] + sign * (rectang_params[0] + distance + gap + ground_width),
+    #              center[1] + rectang_params[1] / 2 + b + ground_width), layer=self.inner_rects_layer
+    #         ), 'not')
+    #         flux_3[int(sign / 2 + 2)] = gdspy.boolean(flux_3[int(sign / 2 + 2)], gdspy.Rectangle(
+    #             (center[0] + sign * (rectang_params[0] + distance + gap - 2 * distance - rectang_params[0]),
+    #              center[1] - rectang_params[1] / 2 - a),
+    #             (center[0] + sign * (
+    #                         rectang_params[0] + distance + gap + ground_width - 2 * distance - rectang_params[0]),
+    #              center[1] + rectang_params[1] / 2 + b + ground_width), layer=self.inner_rects_layer
+    #         ), 'not')
+    #     for i in range(3):
+    #         self.total_cell.add(flux_3[i])
+    #         # self.cell_to_remove.add(flux)
+    #         self.cell_to_remove.add(empty_rectangle_3[i])
+    #         self.two_small_rectangles_list.append(two_small_rectangles_3[i])
+
+    def add_triple_fluxonium(self, central_dot, dist, ledge, ground_width, gap, central_rect_in_slit, rect_in_slit,
+                             inner_rect_params):
+        flux_3 = gdf.TripleFluxonium(central_dot, dist, ledge, ground_width, gap, central_rect_in_slit, rect_in_slit,
+                                     inner_rect_params, self.total_layer)
+        self.triple_fluxoniums.append(flux_3)
+        self.result.add(flux_3.generate())
+
     def add_fluxonium(self, center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params,
                       ledge, a, b):
-        """
-        :param center: center of fluxonium like (x_coordinate, y_coordinate)
-        :param distance: distance from center to the borders of inner rectangles
-        :param rectang_params: parameters like (width_rectang,height_rectang) for big inner rectangles
-        :param gap: distance between inner rectangles and ground
-        :param ground_width: width of ground
-        :param slit_width: width of small area at the top of fluxonium
-        :param rect_in_slit_params: parameters like (width_rectang,height_rectang) for rectangle in slit
-        :param ledge: the depth of penetration of the rectangle into the cavity
-        """
-
         self.fluxoniums.append(
             gdf.Fluxonium(center, distance, rectang_params, gap, ground_width, slit_width, rect_in_slit_params, ledge,
                           self.inner_rects_layer, a, b))

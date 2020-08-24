@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import reduce
 
 import gdspy
@@ -790,9 +791,77 @@ def _generate_rectangular_triangle(vertex, side, to_x: bool = True, to_y: bool =
         (vertex[0], vertex[1] + y)],
         layer=layer)
 
-# class TripleFluxonium:
-#     def __init__(self, dist, ledge, ground_width, gap, central_rect_in_slit, ):
-#         ...
-#
-#     def generate_ground(self):
-#         self.
+
+class TripleFluxonium:
+    def __init__(self, central_dot, dist, ledge, ground_width, gap, central_rect_in_slit, rect_in_slit,
+                 inner_rect_params, layer):
+        self.central_dot = central_dot  # ex: (2200, 2300)
+        self.dist = dist  # ex: (100, 100)
+        self.ledge = ledge  # ex: (8, 10, 9)
+        self.ground_width = ground_width  # ex: (80, 80, 80, 80)
+        self.gap = gap  # ex: (10, 10, 15, 20)
+        self.central_rect_in_slit = central_rect_in_slit  # ex: (50, 60)
+        self.rect_in_slit = rect_in_slit  # ex: (50, 70)
+        self.inner_rect_params = inner_rect_params  # ex: (380, 20)
+        self.layer = layer
+
+    def generate(self):
+        inner_top = self.central_dot[1] + self.inner_rect_params[1] / 2 + self.gap[0]
+        x_right_center = self.central_dot[0] + self.dist[1] + self.inner_rect_params[0] + self.dist[0]
+        inner_right = x_right_center + self.dist[0] + self.inner_rect_params[0] + self.gap[2]
+        # ground
+        ground_top = gdspy.Rectangle(
+            (inner_right + self.ground_width[2], inner_top),
+            (self.central_dot[0], inner_top + self.ground_width[0]), layer=self.layer)
+        ground_side = gdspy.Rectangle(
+            (inner_right + self.ground_width[2], inner_top),
+            (inner_right, inner_top - 2 * self.gap[0] - self.inner_rect_params[1]), layer=self.layer)
+        ground_side_bottom = gdspy.Rectangle(
+            (x_right_center + self.dist[0] - self.gap[1],
+             self.central_dot[1] - self.inner_rect_params[1] / 2 - self.gap[0] - self.ground_width[1]),
+            (x_right_center + self.dist[0] + self.inner_rect_params[0] + self.gap[2] + self.ground_width[2],
+             self.central_dot[1] - self.inner_rect_params[1] / 2 - self.gap[0]), layer=self.layer)
+        ground_center_bottom = gdspy.Rectangle(
+            (self.central_dot[0] + self.dist[1] - self.gap[1], self.central_dot[1] - \
+             self.inner_rect_params[1] * 3 / 2 - self.gap[3] - self.gap[0] - self.ground_width[3]),
+            (self.central_dot[0] + self.dist[1] + self.inner_rect_params[0] + self.gap[1],
+             self.central_dot[1] - self.inner_rect_params[1] * 3 / 2 - self.gap[3] - self.gap[0]), layer=self.layer)
+        # rectangles
+        inner_rectangle_right = gdspy.Rectangle(
+            (inner_right - self.gap[2], self.central_dot[1] + self.inner_rect_params[1] / 2),
+            (inner_right - self.gap[2] - self.inner_rect_params[0],
+             self.central_dot[1] - self.inner_rect_params[1] / 2),
+            layer=self.layer)
+        inner_rectangle_top = deepcopy(inner_rectangle_right).mirror((x_right_center, self.central_dot[1]),
+                                                                     (x_right_center, self.central_dot[1] + 1))
+        inner_rectangle_bottom = deepcopy(inner_rectangle_top).mirror(
+            (self.central_dot[0], self.central_dot[1] - self.inner_rect_params[1] / 2 - self.gap[3] / 2),
+            (self.central_dot[0] + 1, self.central_dot[1] - self.inner_rect_params[1] / 2 - self.gap[3] / 2))
+
+        rect_in_slit = gdspy.Rectangle(
+            (x_right_center + self.dist[0] - self.gap[1],
+             self.central_dot[1] - self.inner_rect_params[1] / 2 - self.gap[0] + self.ledge[0]),
+            (x_right_center + self.dist[0] - self.gap[1] - self.rect_in_slit[0],
+             self.central_dot[1] - self.inner_rect_params[1] / 2 - self.gap[0] + self.ledge[0] - self.rect_in_slit[1]),
+            layer=self.layer)
+        # yet another rectangle in slit
+        ya_rect_in_slit = deepcopy(rect_in_slit).mirror((x_right_center, self.central_dot[1]),
+                                                        (x_right_center, self.central_dot[1] + 1))
+        rect_ledge_1 = gdspy.Rectangle(
+            (self.central_dot[0] + self.dist[1] - self.gap[1], inner_top - self.ledge[1]),
+            (self.central_dot[0] + self.dist[1] - self.gap[1] - self.central_rect_in_slit[0], inner_top),
+            layer=self.layer)
+        central_rect_in_slit = gdspy.Rectangle(
+            (self.central_dot[0] + self.dist[1] - self.gap[1],
+             self.central_dot[1] - self.inner_rect_params[1] * 3 / 2 - self.gap[3] - self.gap[0] + self.ledge[2]),
+            (self.central_dot[0] + self.dist[1] - self.gap[1] - self.central_rect_in_slit[0],
+             self.central_dot[1] - self.inner_rect_params[1] * 3 / 2 - self.gap[3] - self.gap[0] + self.ledge[2] - \
+             self.central_rect_in_slit[1]), layer=self.layer)
+        print(self.central_rect_in_slit[1], self.ledge[2])
+        result_right = reduce(lambda res, x: gdspy.boolean(x, res, 'or'),
+                              (ground_top, ground_side, ground_side_bottom, ground_center_bottom,
+                               inner_rectangle_right, inner_rectangle_top, inner_rectangle_bottom,
+                               rect_in_slit, ya_rect_in_slit, rect_ledge_1, central_rect_in_slit),
+                              None)
+        result_left = deepcopy(result_right).mirror(self.central_dot, (self.central_dot[0], self.central_dot[1] + 1))
+        return gdspy.boolean(result_right, result_left, 'or')
